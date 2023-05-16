@@ -8,3 +8,7 @@ Goal is get the coin fast as you can
  * Restart: `R`
  * Delete save: Hold `X`
  * Pause: `ESC` or `SPACE`
+
+## How to run:
+* Download the repo
+* Run `python game.py` or run `game.py` using python
