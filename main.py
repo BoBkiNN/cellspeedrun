@@ -81,6 +81,8 @@ class Game:
         pygame.display.set_icon(assetsutils.get_image(assetsutils.assets_folder+os.sep+"icon.png"))
         self.running = False
         self.screen = None
+        self.m_info = pygame.display.Info()
+        self.fullscreen = False
         self.window_size = (800, 800)
         self.original_size = self.window_size
         self.screen = pygame.display.set_mode(self.window_size, pygame.RESIZABLE)
@@ -396,7 +398,10 @@ class Game:
     def on_resize(self, w, h):
         self.window_size = (w, h)
         self.size_ratio = (w/self.original_size[0], h/self.original_size[1])
-        self.screen = pygame.display.set_mode(self.window_size, pygame.RESIZABLE)
+        if self.fullscreen:
+            self.screen = pygame.display.set_mode(self.window_size, pygame.FULLSCREEN)
+        else:
+            self.screen = pygame.display.set_mode(self.window_size, pygame.RESIZABLE)
         self.bg_surf = self.remake_bg()
         gridmeta = self.gridmeta
         self.field = self.create_grid(gridmeta["s_x"], gridmeta["s_y"], gridmeta["sp_x"], gridmeta["sp_y"], gridmeta["rows"], gridmeta["cols"])
@@ -415,7 +420,7 @@ class Game:
             if key == pygame.K_x:
                 self.x_hold = False
             return
-        not_any = [1073742051, pygame.K_PRINTSCREEN, pygame.K_m, pygame.K_x, pygame.K_r]
+        not_any = [1073742051, pygame.K_PRINTSCREEN, pygame.K_m, pygame.K_x, pygame.K_r, pygame.K_F11]
         if self.paused and key not in not_any:
             self.paused = not self.paused
             self.on_pause(not self.paused)
@@ -426,6 +431,12 @@ class Game:
             self.mute = not self.mute
         if key == pygame.K_r:
             self.restart()
+        if key == pygame.K_F11:
+            self.fullscreen = not self.fullscreen
+            if self.fullscreen:
+                self.on_resize(self.m_info.current_w, self.m_info.current_h)
+            else:
+                self.on_resize(self.original_size[0], self.original_size[1])
         if self.paused:
             if key == pygame.K_x:
                 self.x_hold = True
