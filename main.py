@@ -186,9 +186,6 @@ class Game:
     def on_pause(self, resume):
         if resume:
             self.start_time = self.start_time+self.pause_delta
-            # if self.restarted:
-            #     print(self.start_time, self.pause_delta)
-            #     self.start_time = datetime.utcnow().timestamp()+self.pause_delta
             self.restarted = False
             return
         self.pause_delta = 0.0
