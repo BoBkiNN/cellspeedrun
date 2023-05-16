@@ -10,5 +10,5 @@ Goal is get the coin fast as you can
  * Pause: `ESC` or `SPACE`
 
 ## How to run:
-* Download the repo
-* Run `python game.py` or run `game.py` using python
+ * Download the repo
+ * Run `python game.py` or run `game.py` using python
