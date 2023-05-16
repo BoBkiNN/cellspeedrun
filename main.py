@@ -158,6 +158,7 @@ class Game:
     
     def save_data(self):
         d = {
+            "mute": self.mute,
             "avg_time": self.avg_time,
             "points": self.points,
             "best": self.best,
@@ -176,10 +177,11 @@ class Game:
         with open(self.save_file, encoding="utf8") as f:
             s = f.read()
             d = json.loads(s)
-            self.time_results = d["results"]
-            self.avg_time = d["avg_time"]
-            self.points = d["points"]
-            self.best = d["best"]
+            self.time_results: list[float] = d["results"]
+            self.avg_time: float = d["avg_time"]
+            self.points: int = d["points"]
+            self.best: float = d["best"]
+            self.mute: bool = d["mute"]
     
     def on_pause(self, resume):
         if resume:
@@ -189,7 +191,7 @@ class Game:
             #     self.start_time = datetime.utcnow().timestamp()+self.pause_delta
             self.restarted = False
             return
-        self.pause_delta = 0
+        self.pause_delta = 0.0
         self.pause_time = datetime.utcnow().timestamp()
         self.save_data()
     
