@@ -7,3 +7,4 @@ Goal is get the coin fast as you can
  * Mute sounds: `M`
  * Restart: `R`
  * Delete save: Hold `X`
+ * Pause: `ESC` or `SPACE`
