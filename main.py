@@ -11,7 +11,7 @@ import textutils
 import utils
 from vector2 import Vector
 
-
+### By github.com/BoBkiNN ###
 class Game:
 
     @staticmethod
