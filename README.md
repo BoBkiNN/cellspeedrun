@@ -11,4 +11,4 @@ Goal is get the coin fast as you can
 
 ## How to run:
  * Download the repo
- * Run `python game.py` or run `game.py` using python
+ * Run `python main.py` or run `main.py` using python
