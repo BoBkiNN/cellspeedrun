@@ -11,4 +11,5 @@ Goal is get the coin fast as you can
 
 ## How to run:
  * Download the repo
+ * Install PyGame using `python -m pip install pygame`
  * Run `python main.py` or run `main.py` using python
