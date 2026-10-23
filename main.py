@@ -25,6 +25,128 @@ class GridConfig:
     rows: int
     cols: int
 
+class Menu:
+    TIME_TO_RESET = 120
+
+    def __init__(self, game: "Game") -> None:
+        self.game = game
+        self.screen = game.screen
+        self.clock_sprites = game.assets.get_looped("clock", "clock")
+        self.muted_sprites = game.assets.get_looped("muted")
+        self.reset_icon = game.assets.get_image("reset.png")
+        self.restart_icon = game.assets.get_image("restart.png")
+        self.clock_anim = 0
+        self.holding_x = False
+        self.reset_time = 0
+    
+    def reset_hold_x(self):
+        self.holding_x = False
+        self.reset_time = 0
+
+    def update(self):
+        if not self.holding_x:
+            if self.reset_time > 0:
+                self.reset_time -= 1
+        if self.game.paused:
+            self.pause_delta = now()-self.game.pause_time
+            if self.holding_x == True and self.reset_time < Menu.TIME_TO_RESET:
+                self.reset_time += 1 
+            if self.reset_time >= Menu.TIME_TO_RESET:
+                self.reset_time = 0
+                self.game.do_reset()
+        else:
+            if self.game.tick % 3 == 0:
+                self.clock_anim = self.clock_anim+1
+            if self.clock_anim == len(self.clock_sprites):
+                self.clock_anim = 0
+
+    @property
+    def size_ratio(self):
+        return self.game.size_ratio
+
+    @property
+    def main_font(self):
+        return self.game.main_font
+
+    def draw_right(self):
+        time_s = "{:.3f}".format(self.game.delta)
+        deltaText = textutils.render_w_shadow(time_s, int(20*self.size_ratio[1]), self.main_font, (255, 255, 0))
+        clock: pygame.Surface = self.clock_sprites[self.clock_anim]
+        delta_clock_y_dif = abs(deltaText.get_size()[1]-clock.get_size()[1])
+        clockpos = [self.screen.get_size()[0]-clock.get_size()[0]-int(10*self.size_ratio[0]), int(10*self.size_ratio[1])-delta_clock_y_dif//2]
+        self.screen.blit(clock, clockpos)
+        self.screen.blit(deltaText, [clockpos[0]-deltaText.get_size()[0]-10, deltaText.get_size()[1]-int(10*self.size_ratio[1])])
+
+        avgText = textutils.render_w_shadow("avg: {:.3f}".format(self.game.avg_time), int(20*self.size_ratio[1]), self.main_font, (255, 255, 0))
+        self.screen.blit(avgText, [self.screen.get_size()[0]-avgText.get_size()[0]-int(10*self.size_ratio[0]), deltaText.get_size()[1]+10+avgText.get_size()[1]-int(10*self.size_ratio[1])])
+
+    def draw_left(self):
+        if self.game.best != -1:
+            best = "{:.3f}".format(self.game.best)
+        else:
+            best = "-"
+        bestText = textutils.render_w_shadow("Best: "+best, int(20*self.size_ratio[1]), self.main_font, (230, 48, 127))
+        # tickText = textutils.render_w_shadow("Tick #"+str(self.tick), int(20*self.size_ratio[1]), self.main_font, (255, 255, 0), file=True)
+        # self.screen.blit(tickText, [int(10*self.size_ratio[0]), int(10*self.size_ratio[1])])
+        self.screen.blit(bestText, [int(10*self.size_ratio[0]), int(10*self.size_ratio[1])])
+        mark = textutils.render_w_shadow("github.com/BoBkiNN", int(10*self.size_ratio[1]), self.main_font, (230, 48, 127))
+        self.screen.blit(mark, [int(5*self.size_ratio[0]), self.screen.get_size()[1]-int(10*self.size_ratio[1])-mark.get_size()[1]])
+
+    def draw_paused(self):
+        layer = pygame.Surface(self.game.window_size, pygame.SRCALPHA)
+        layer.fill((0, 0, 0, 90))
+        # paused_s = "{:.3f}".format(self.pause_delta)
+        pausedText = textutils.render_w_shadow("PAUSE", int(40*self.size_ratio[1]), self.main_font, (255, 255, 255))
+        time = textutils.render_w_shadow("Press any key to resume", int(20*self.size_ratio[1]), self.main_font, (255, 255, 255))
+        layer.blit(pausedText, [layer.get_size()[0]//2-pausedText.get_size()[0]//2, layer.get_size()[1]//3])
+        r2 = layer.blit(time, [layer.get_size()[0]//2-time.get_size()[0]//2, layer.get_size()[1]//3+pausedText.get_size()[1]+10])
+
+        mute_text = textutils.render_w_shadow("Press M to (un)mute", int(20*self.size_ratio[1]), self.main_font, (255, 255, 255))
+        row2_size = [60+10+mute_text.get_size()[0], max(60, mute_text.get_size()[1])]
+        mute_pos = [layer.get_size()[0]//2-row2_size[0]//2, r2.bottomright[1]+int(20*self.size_ratio[1])]
+        r3 = layer.blit(self.muted_sprites[int(not self.game.mute)], mute_pos)
+        r4 = layer.blit(mute_text, [layer.get_size()[0]//2-row2_size[0]//2+60+20, r2.bottomright[1]+int(20*self.size_ratio[1])+30-mute_text.get_size()[1]//2])
+        r5 = r3.union(r4)
+
+        row2 = utils.UiRow(pygame.Surface(self.game.window_size, pygame.SRCALPHA))
+        restart_text = textutils.render_w_shadow("Press R to restart", int(20*self.size_ratio[1]), self.game.main_font, (255, 255, 255))
+        row2.add(self.restart_icon)
+        row2.add(restart_text, offset=10)
+        row2r = row2.render()
+        r5 = layer.blit(row2r, [layer.get_size()[0]//2-row2r.get_size()[0]//2, r5.bottom+int(10*self.size_ratio[1])])
+
+        row3 = utils.UiRow(pygame.Surface(self.game.window_size, pygame.SRCALPHA))
+        reset_text = textutils.render_w_shadow("Hold X to reset", int(20*self.size_ratio[1]), self.game.main_font, (235, 52, 110))
+        row3.add(self.reset_icon)
+        row3.add(reset_text, offset=10)
+        b3 = row3.render()
+        b3r = b3.get_rect()
+        # r6 = layer2.blit(hold_x_text, [layer2.get_size()[0]//2-hold_x_text.get_size()[0]//2 , r5.bottom+int(20*self.size_ratio[1])])
+        reset_row = pygame.Surface([b3r.size[0], b3r.size[1]+int(7*self.size_ratio[1])+20], pygame.SRCALPHA)
+        reset_row.blit(b3, [0, 0])
+
+        hold_noise_x = 0
+        hold_noise_y = 0
+
+        if self.holding_x or self.reset_time != 0:
+            # print(self.reset_time)
+            p = self.reset_time / Menu.TIME_TO_RESET
+            if p < 0:
+                p = 0
+            lenght = b3r.size[0]
+            delta = lenght*p
+            hold_noise_x = random.randint(-20, 20)*p
+            hold_noise_y = random.randint(-20, 20)*p
+            pygame.draw.line(reset_row, (235, 52, 110), [b3r.x, b3r.y+int(7*self.size_ratio[1])+b3r.size[1]], [b3r.left+delta, b3r.y+int(7*self.size_ratio[1])+b3r.size[1]], 10)
+        layer.blit(reset_row, [layer.get_size()[0]//2-reset_row.get_size()[0]//2+hold_noise_x, r5.bottom+int(10*self.size_ratio[1])+hold_noise_y])
+        self.screen.blit(layer, [0, 0])
+
+    def render(self):
+        self.draw_left()
+        self.draw_right()
+        if self.game.paused:
+            self.draw_paused()
+
 ### By github.com/BoBkiNN ###
 class Game:
 
@@ -131,16 +253,13 @@ class Game:
         self.field = self.create_grid(self.grid_config)
         self.player_sprites =  self.assets.get_looped_r("player")
         self.coin_sprites = self.assets.get_looped_r("coin")
-        self.clock_sprites = self.assets.get_looped("clock", "clock")
-        self.muted_sprites = self.assets.get_looped("muted")
-        self.reset_icon = self.assets.get_image("reset.png")
-        self.restart_icon = self.assets.get_image("restart.png")
+        
         self.coin_sound = pygame.mixer.Sound(self.assets.folder / "coin.mp3")
         self.move_sound = pygame.mixer.Sound(self.assets.folder / "move.wav")
         self.mute = False
         self.player = 0
         self.coin_anim = 0
-        self.clock_anim = 0
+        
         self.grid = self.get_field()
         self.repos_grid()
         self.start_time = now()
@@ -151,14 +270,12 @@ class Game:
         self.time_results = []
         self.avg_time = 0.0
         self.last_add = 0
-        self.reset_time = 0
-        self.time_to_reset = 120
-        self.x_hold = False
         self.restarted = False
         try:
             self.load_data()
         except Exception as e:
             print("Failed to load:", e)
+        self.menu = Menu(self)
 
     def start(self):
         self.running = True
@@ -199,10 +316,11 @@ class Game:
             self.best: float = d["best"]
             self.mute: bool = d["mute"]
     
-    def on_pause(self, resume):
+    def on_pause(self, resume: bool):
         if resume:
             self.start_time = self.start_time+self.pause_delta
             self.restarted = False
+            self.menu.reset_hold_x()
             return
         self.pause_delta = 0.0
         self.pause_time = now()
@@ -231,16 +349,8 @@ class Game:
                 pygame.mixer.Sound.play(self.coin_sound)
     
     def update(self):
-        if not self.x_hold:
-            if self.reset_time > 0:
-                    self.reset_time -= 1
         if self.paused:
-            self.pause_delta = now()-self.pause_time
-            if self.x_hold == True and self.reset_time < self.time_to_reset:
-                self.reset_time += 1 
-            if self.reset_time == self.time_to_reset:
-                self.reset_time = 0
-                self.do_reset()
+            self.menu.update()
             return
         self.loopvec(self.player_pos)
         self.loopvec(self.moved_from)
@@ -258,11 +368,6 @@ class Game:
             self.coin_anim = self.coin_anim+1
         if self.coin_anim == len(self.coin_sprites):
             self.coin_anim = 0
-        
-        if self.tick % 3 == 0:
-            self.clock_anim = self.clock_anim+1
-        if self.clock_anim == len(self.clock_sprites):
-            self.clock_anim = 0
 
         self.delta = (now()-self.start_time)
         if utils.eq_vec(self.coin_pos, self.player_pos):
@@ -284,83 +389,11 @@ class Game:
             self.points += self.last_add
             if not self.mute:
                 pygame.mixer.Sound.play(self.coin_sound)
+        self.menu.update()
     
     def draw_debug_rect(self, surf: pygame.Surface | pygame.Rect):
         rect = surf.get_rect() if isinstance(surf, pygame.Surface) else surf
         pygame.draw.rect(self.screen, utils.random_col(), rect, 1)
-    
-    def draw_right(self):
-        time_s = "{:.3f}".format(self.delta)
-        deltaText = textutils.render_w_shadow(time_s, int(20*self.size_ratio[1]), self.main_font, (255, 255, 0))
-        clock: pygame.Surface = self.clock_sprites[self.clock_anim]
-        delta_clock_y_dif = abs(deltaText.get_size()[1]-clock.get_size()[1])
-        clockpos = [self.screen.get_size()[0]-clock.get_size()[0]-int(10*self.size_ratio[0]), int(10*self.size_ratio[1])-delta_clock_y_dif//2]
-        self.screen.blit(clock, clockpos)
-        self.screen.blit(deltaText, [clockpos[0]-deltaText.get_size()[0]-10, deltaText.get_size()[1]-int(10*self.size_ratio[1])])
-
-        avgText = textutils.render_w_shadow("avg: {:.3f}".format(self.avg_time), int(20*self.size_ratio[1]), self.main_font, (255, 255, 0))
-        self.screen.blit(avgText, [self.screen.get_size()[0]-avgText.get_size()[0]-int(10*self.size_ratio[0]), deltaText.get_size()[1]+10+avgText.get_size()[1]-int(10*self.size_ratio[1])])
-    
-    def draw_left(self):
-        if self.best != -1:
-            best = "{:.3f}".format(self.best)
-        else:
-            best = "-"
-        bestText = textutils.render_w_shadow("Best: "+best, int(20*self.size_ratio[1]), self.main_font, (230, 48, 127))
-        # tickText = textutils.render_w_shadow("Tick #"+str(self.tick), int(20*self.size_ratio[1]), self.main_font, (255, 255, 0), file=True)
-        # self.screen.blit(tickText, [int(10*self.size_ratio[0]), int(10*self.size_ratio[1])])
-        self.screen.blit(bestText, [int(10*self.size_ratio[0]), int(10*self.size_ratio[1])])
-        mark = textutils.render_w_shadow("github.com/BoBkiNN", int(10*self.size_ratio[1]), self.main_font, (230, 48, 127))
-        self.screen.blit(mark, [int(5*self.size_ratio[0]), self.screen.get_size()[1]-int(10*self.size_ratio[1])-mark.get_size()[1]])
-    
-    def draw_paused(self):
-        layer = pygame.Surface(self.window_size, pygame.SRCALPHA)
-        layer.fill((0, 0, 0, 90))
-        # paused_s = "{:.3f}".format(self.pause_delta)
-        pausedText = textutils.render_w_shadow("PAUSE", int(40*self.size_ratio[1]), self.main_font, (255, 255, 255))
-        time = textutils.render_w_shadow("Press any key to resume", int(20*self.size_ratio[1]), self.main_font, (255, 255, 255))
-        layer.blit(pausedText, [layer.get_size()[0]//2-pausedText.get_size()[0]//2, layer.get_size()[1]//3])
-        r2 = layer.blit(time, [layer.get_size()[0]//2-time.get_size()[0]//2, layer.get_size()[1]//3+pausedText.get_size()[1]+10])
-
-        mute_text = textutils.render_w_shadow("Press M to (un)mute", int(20*self.size_ratio[1]), self.main_font, (255, 255, 255))
-        row2_size = [60+10+mute_text.get_size()[0], max(60, mute_text.get_size()[1])]
-        mute_pos = [layer.get_size()[0]//2-row2_size[0]//2, r2.bottomright[1]+int(20*self.size_ratio[1])]
-        r3 = layer.blit(self.muted_sprites[int(not self.mute)], mute_pos)
-        r4 = layer.blit(mute_text, [layer.get_size()[0]//2-row2_size[0]//2+60+20, r2.bottomright[1]+int(20*self.size_ratio[1])+30-mute_text.get_size()[1]//2])
-        r5 = r3.union(r4)
-
-        row2 = utils.UiRow(pygame.Surface(self.window_size, pygame.SRCALPHA))
-        restart_text = textutils.render_w_shadow("Press R to restart", int(20*self.size_ratio[1]), self.main_font, (255, 255, 255))
-        row2.add(self.restart_icon)
-        row2.add(restart_text, offset=10)
-        row2r = row2.render()
-        r5 = layer.blit(row2r, [layer.get_size()[0]//2-row2r.get_size()[0]//2, r5.bottom+int(10*self.size_ratio[1])])
-
-        row3 = utils.UiRow(pygame.Surface(self.window_size, pygame.SRCALPHA))
-        reset_text = textutils.render_w_shadow("Hold X to reset", int(20*self.size_ratio[1]), self.main_font, (235, 52, 110))
-        row3.add(self.reset_icon)
-        row3.add(reset_text, offset=10)
-        b3 = row3.render()
-        b3r = b3.get_rect()
-        # r6 = layer2.blit(hold_x_text, [layer2.get_size()[0]//2-hold_x_text.get_size()[0]//2 , r5.bottom+int(20*self.size_ratio[1])])
-        reset_row = pygame.Surface([b3r.size[0], b3r.size[1]+int(7*self.size_ratio[1])+20], pygame.SRCALPHA)
-        reset_row.blit(b3, [0, 0])
-
-        hold_noise_x = 0
-        hold_noise_y = 0
-        
-        if self.x_hold == True or self.reset_time != 0:
-            # print(self.reset_time)
-            p = self.reset_time/self.time_to_reset
-            if p < 0:
-                p = 0
-            lenght = b3r.size[0]
-            delta = lenght*p
-            hold_noise_x = random.randint(-20, 20)*p
-            hold_noise_y = random.randint(-20, 20)*p
-            pygame.draw.line(reset_row, (235, 52, 110), [b3r.x, b3r.y+int(7*self.size_ratio[1])+b3r.size[1]], [b3r.left+delta, b3r.y+int(7*self.size_ratio[1])+b3r.size[1]], 10)
-        layer.blit(reset_row, [layer.get_size()[0]//2-reset_row.get_size()[0]//2+hold_noise_x, r5.bottom+int(10*self.size_ratio[1])+hold_noise_y])
-        self.screen.blit(layer, [0, 0])
 
     def render(self):
         self.screen.fill((0, 0, 0))
@@ -390,10 +423,7 @@ class Game:
         pointsText = textutils.render_w_shadow(str(self.points)+addText, int(20*self.size_ratio[1]), self.main_font, (51, 255, 177))
         self.screen.blit(pointsText, [self.screen.get_rect().centerx-pointsText.get_size()[0]//2, pointsText.get_size()[1]])
 
-        self.draw_right()
-        self.draw_left()
-        if self.paused:
-            self.draw_paused()
+        self.menu.render()
         pygame.display.flip()
     
     def repos_grid(self):
@@ -424,7 +454,7 @@ class Game:
     def on_key_press(self, key, up: bool):
         if up: 
             if key == pygame.K_x:
-                self.x_hold = False
+                self.menu.holding_x = False
             return
         not_any = [1073742051, pygame.K_PRINTSCREEN, pygame.K_m, pygame.K_x, pygame.K_r, pygame.K_F11]
         if self.paused and key not in not_any:
@@ -445,9 +475,8 @@ class Game:
                 self.on_resize(self.original_size[0], self.original_size[1])
         if self.paused:
             if key == pygame.K_x:
-                self.x_hold = True
+                self.menu.holding_x = True
             return
-        self.reset_time = 0
         if key == pygame.K_UP:
             self.moved_from = self.player_pos.copy()
             self.player_pos.add(0, -1)
