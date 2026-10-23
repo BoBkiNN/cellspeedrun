@@ -238,13 +238,6 @@ class Game:
         self.paused = True
         self.save_file = self.folder / "save.json"
 
-        self.points = 0
-        self.player_pos = Vector(2, 2)
-        self.moved_from = self.player_pos.copy()
-        coin_x = utils.random_exclude(0, 4, self.player_pos.x)
-        coin_y = utils.random_exclude(0, 4, self.player_pos.y)
-        self.coin_pos = Vector(coin_x, coin_y)
-        self.bg_surf = self.remake_bg()
         self.grid_config = GridConfig(
             s_x=100,
             s_y=100,
@@ -254,6 +247,12 @@ class Game:
             cols=5
         )
         self.field = self.create_grid(self.grid_config)
+        self.points = 0
+        self.player_pos = Vector(2, 2)
+        self.moved_from = self.player_pos.copy()
+        self.coin_pos = self.new_coin_pos()
+        self.bg_surf = self.remake_bg()
+
         player_sprites =  self.assets.get_looped_r("player")
         self.player_anim = SpriteLoop(player_sprites, 50)
         coin_sprites = self.assets.get_looped_r("coin")
@@ -336,14 +335,17 @@ class Game:
         self.best = -1
         self.save_data()
         self.time_results = []
+
+    def new_coin_pos(self):
+        coin_x = utils.random_exclude(0, self.grid_config.cols-1, self.player_pos.x)
+        coin_y = utils.random_exclude(0, self.grid_config.rows-1, self.player_pos.y)
+        return Vector(coin_x, coin_y)
     
     def restart(self):
         self.restarted = True
         self.player_pos = Vector(2, 2)
         self.moved_from = self.player_pos.copy()
-        coin_x = utils.random_exclude(0, 4, self.player_pos.x)
-        coin_y = utils.random_exclude(0, 4, self.player_pos.y)
-        self.coin_pos = Vector(coin_x, coin_y)
+        self.coin_pos = self.new_coin_pos()
         self.last_add = 0
         self.delta = 0
         self.start_time = self.start_time+self.pause_delta
@@ -352,9 +354,7 @@ class Game:
                 pygame.mixer.Sound.play(self.coin_sound)
 
     def pickup_coin(self):
-        new_x = utils.random_exclude(0, 4, self.player_pos.x)
-        new_y = utils.random_exclude(0, 4, self.player_pos.y)
-        self.coin_pos = Vector(new_x, new_y)
+        self.coin_pos = self.new_coin_pos()
         self.start_time = now()
         self.time_results.append(self.delta)
         if self.best == -1:
