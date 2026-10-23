@@ -147,12 +147,15 @@ class Menu:
         if self.game.paused:
             self.draw_paused()
 
+type Grid = list[list[pygame.Rect]]
+"""List of rows of columns of cells"""
+
 ### By github.com/BoBkiNN ###
 class Game:
 
     @staticmethod
-    def create_grid(cfg: GridConfig):
-        rectangles = []
+    def create_grid(cfg: GridConfig) -> Grid:
+        rectangles: Grid = []
         for row in range(cfg.rows):
             r = []
             for col in range(cfg.cols):
@@ -160,7 +163,7 @@ class Game:
                 x_pos = (col + 1) * cfg.sp_x + col * cfg.s_x
                 y_pos = (row + 1) * cfg.sp_y + row * cfg.s_y
 
-                new_rect = {'x': x_pos, 'y': y_pos, "r": pygame.Rect(x_pos, y_pos, cfg.s_x, cfg.s_y)}
+                new_rect = pygame.Rect(x_pos, y_pos, cfg.s_x, cfg.s_y)
                 r.append(new_rect)
             rectangles.append(r)
         return rectangles
@@ -194,8 +197,7 @@ class Game:
         w = 0
         h = 0
         for row in self.field:
-            for col in row:
-                r: pygame.Rect = col["r"]
+            for r in row:
                 w = max(w, r.bottomright[0]+self.grid_config.sp_x)
                 h = max(h, r.bottomright[1]+self.grid_config.sp_y)
                 # srf.blit(self.platform_sprites[0], r)
@@ -400,20 +402,18 @@ class Game:
         self.screen.blit(self.bg_surf, [0, 0])
         self.screen.blit(self.grid, self.gridpos)
         # pygame.draw.rect(self.screen, (255, 255, 0), grid_rect, 2)
-        cell: dict = self.field[self.player_pos.y][self.player_pos.x]
-        cell_r: pygame.Rect = cell["r"]
+        cell = self.field[self.player_pos.y][self.player_pos.x]
         player: pygame.Surface = self.player_sprites[self.player]
         player_size = player.get_size()
-        px = cell["x"]+(cell_r.size[0]//2 - player_size[0]//2)+self.gridpos[0]
-        py = cell["y"]+(cell_r.size[1]//2 - player_size[1]//2)+self.gridpos[1]
+        px = cell.x+(cell.size[0]//2 - player_size[0]//2)+self.gridpos[0]
+        py = cell.y+(cell.size[1]//2 - player_size[1]//2)+self.gridpos[1]
         # pygame.draw.rect(self.screen, (255, 255, 255), pygame.Rect(px, py, self.player_size[0], self.player_size[1]))
         self.screen.blit(player, [px, py])
 
-        cell_c: dict = self.field[self.coin_pos.y][self.coin_pos.x]
-        cell_c_r: pygame.Rect = cell_c["r"]
+        cell_c = self.field[self.coin_pos.y][self.coin_pos.x]
         coin = self.coin_sprites[self.coin_anim]
-        cx = cell_c["x"]+(cell_c_r.size[0]//2 - coin.get_size()[0]//2)+self.gridpos[0]
-        cy = cell_c["y"]+(cell_c_r.size[1]//2 - coin.get_size()[1]//2)+self.gridpos[1]
+        cx = cell_c.x+(cell_c.size[0]//2 - coin.get_size()[0]//2)+self.gridpos[0]
+        cy = cell_c.y+(cell_c.size[1]//2 - coin.get_size()[1]//2)+self.gridpos[1]
 
         self.screen.blit(coin, [cx, cy])
 
@@ -446,8 +446,8 @@ class Game:
     
     def on_move(self, fr: Vector, to: Vector):
         # print("Moved ", fr, "->", to)
-        cell_f: dict = self.field[fr.y][fr.x]
-        cell_t: dict = self.field[to.y][to.x]
+        # cell_f = self.field[fr.y][fr.x]
+        # cell_t = self.field[to.y][to.x]
         if not self.mute:
             pygame.mixer.Sound.play(self.move_sound)
     

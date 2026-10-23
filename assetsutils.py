@@ -4,10 +4,9 @@ import pygame
 import os
 from math import floor
 
-assets_folder = os.getcwd()+os.sep+"assets"
 ASSETS_FOLDER = "assets"
 
-ImageCacheKey = tuple[Path, tuple[int, int] | None]
+type ImageCacheKey = tuple[Path, tuple[int, int] | None]
 """Tuple of image path to size"""
 
 class Assets:
