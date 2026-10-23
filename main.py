@@ -10,21 +10,35 @@ import assetsutils
 import textutils
 import utils
 from vector2 import Vector
+from dataclasses import dataclass
+
+@dataclass(kw_only=True)
+class GridConfig:
+    s_x: int
+    """X size"""
+    s_y: int
+    """Y size"""
+    sp_x: int
+    """X spacing"""
+    sp_y: int
+    """Y spacing"""
+    rows: int
+    cols: int
 
 ### By github.com/BoBkiNN ###
 class Game:
 
     @staticmethod
-    def create_grid(size_x, size_y, x_spacing, y_spacing, rows, cols):
+    def create_grid(cfg: GridConfig):
         rectangles = []
-        for row in range(rows):
+        for row in range(cfg.rows):
             r = []
-            for col in range(cols):
+            for col in range(cfg.cols):
                 # Calculate the position of the current rectangle
-                x_pos = (col + 1) * x_spacing + col * size_x
-                y_pos = (row + 1) * y_spacing + row * size_y
+                x_pos = (col + 1) * cfg.sp_x + col * cfg.s_x
+                y_pos = (row + 1) * cfg.sp_y + row * cfg.s_y
 
-                new_rect = {'x': x_pos, 'y': y_pos, "r": pygame.Rect(x_pos, y_pos, size_x, size_y)}
+                new_rect = {'x': x_pos, 'y': y_pos, "r": pygame.Rect(x_pos, y_pos, cfg.s_x, cfg.s_y)}
                 r.append(new_rect)
             rectangles.append(r)
         return rectangles
@@ -35,12 +49,12 @@ class Game:
 
     def loopvec(self, vec: Vector):
         if vec.x < 0:
-            vec.x = self.gridmeta["cols"]-1
+            vec.x = self.grid_config.cols-1
         if vec.y < 0:
-            vec.y = self.gridmeta["rows"]-1
-        if vec.x >= self.gridmeta["cols"]:
+            vec.y = self.grid_config.rows-1
+        if vec.x >= self.grid_config.cols:
             vec.x = 0
-        if vec.y >= self.gridmeta["rows"]:
+        if vec.y >= self.grid_config.rows:
             vec.y = 0
 
     def remake_bg(self):
@@ -60,8 +74,8 @@ class Game:
         for row in self.field:
             for col in row:
                 r: pygame.Rect = col["r"]
-                w = max(w, r.bottomright[0]+self.gridmeta["sp_x"])
-                h = max(h, r.bottomright[1]+self.gridmeta["sp_y"])
+                w = max(w, r.bottomright[0]+self.grid_config.sp_x)
+                h = max(h, r.bottomright[1]+self.grid_config.sp_y)
                 # srf.blit(self.platform_sprites[0], r)
                 pygame.draw.rect(srf, (155, 52, 235), self.copymove(r, [4, 4]))
                 pygame.draw.rect(srf, (155, 52, 235), self.copymove(r, [2, 2]))
@@ -104,16 +118,15 @@ class Game:
         self.coin_pos = Vector(coin_x, coin_y)
         self.bg_px_s = 20
         self.bg_surf = self.remake_bg()
-        gridmeta = {
-            "s_x": 100,
-            "s_y": 100,
-            "sp_x": 50,
-            "sp_y": 50,
-            "rows": 5,
-            "cols": 5
-        }
-        self.gridmeta = gridmeta
-        self.field = self.create_grid(gridmeta["s_x"], gridmeta["s_y"], gridmeta["sp_x"], gridmeta["sp_y"], gridmeta["rows"], gridmeta["cols"])
+        self.grid_config = GridConfig(
+            s_x=100,
+            s_y=100,
+            sp_x=50,
+            sp_y=50,
+            rows=5,
+            cols=5
+        )
+        self.field = self.create_grid(self.grid_config)
         self.player_sprites =  assetsutils.get_looped_r("player")
         self.coin_sprites = assetsutils.get_looped_r("coin")
         self.clock_sprites = assetsutils.get_looped("clock", os.sep+"clock")
@@ -395,8 +408,7 @@ class Game:
         else:
             self.screen = pygame.display.set_mode(self.window_size, pygame.RESIZABLE)
         self.bg_surf = self.remake_bg()
-        gridmeta = self.gridmeta
-        self.field = self.create_grid(gridmeta["s_x"], gridmeta["s_y"], gridmeta["sp_x"], gridmeta["sp_y"], gridmeta["rows"], gridmeta["cols"])
+        self.field = self.create_grid(self.grid_config)
         self.grid = self.get_field()
         self.repos_grid()
     
