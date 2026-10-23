@@ -474,16 +474,16 @@ class Game:
             if key == pygame.K_x:
                 self.menu.holding_x = True
             return
-        if key == pygame.K_UP:
+        if key in [pygame.K_UP, pygame.K_w]:
             self.moved_from = self.player_pos.copy()
             self.player_pos.add(0, -1)
-        elif key == pygame.K_DOWN:
+        elif key in [pygame.K_DOWN, pygame.K_s]:
             self.moved_from = self.player_pos.copy()
             self.player_pos.add(0, 1)
-        elif key == pygame.K_LEFT:
+        elif key in [pygame.K_LEFT, pygame.K_a]:
             self.moved_from = self.player_pos.copy()
             self.player_pos.add(-1, 0)
-        elif key == pygame.K_RIGHT:
+        elif key in [pygame.K_RIGHT, pygame.K_d]:
             self.moved_from = self.player_pos.copy()
             self.player_pos.add(1, 0)
 
