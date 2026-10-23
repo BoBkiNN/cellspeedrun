@@ -186,14 +186,14 @@ class Game:
     BG_PIXEL_SIZE = 20
 
     def remake_bg(self):
-        self.bg_surf = pygame.Surface(self.window_size)
+        surf = pygame.Surface(self.window_size)
         for i in range(self.window_size[1]//Game.BG_PIXEL_SIZE+1):
             for j in range(self.window_size[0]//Game.BG_PIXEL_SIZE+1):
                 x = j*Game.BG_PIXEL_SIZE
                 y = i*Game.BG_PIXEL_SIZE
                 r = pygame.Rect(x, y, Game.BG_PIXEL_SIZE, Game.BG_PIXEL_SIZE)
-                pygame.draw.rect(self.bg_surf, utils.random_chromatic(50), r)
-        return self.bg_surf
+                pygame.draw.rect(surf, utils.random_chromatic(50), r)
+        return surf
     
     def get_field(self) -> pygame.Surface:
         srf = pygame.Surface(self.window_size, pygame.SRCALPHA)
@@ -239,6 +239,20 @@ class Game:
         self.paused = True
         self.save_file = self.folder / "save.json"
 
+        player_sprites =  self.assets.get_looped_r("player")
+        self.player_anim = SpriteLoop(player_sprites, 50)
+        coin_sprites = self.assets.get_looped_r("coin")
+        self.coin_anim = SpriteLoop(coin_sprites, 20)
+        
+        self.coin_sound = pygame.mixer.Sound(self.assets.folder / "coin.mp3")
+        self.move_sound = pygame.mixer.Sound(self.assets.folder / "move.wav")
+
+        self.points = 0
+        self.mute = False
+        self.best = -1
+        self.time_results = []
+        self.avg_time = 0.0
+
         self.grid_config = GridConfig(
             s_x=100,
             s_y=100,
@@ -248,30 +262,16 @@ class Game:
             cols=5
         )
         self.field = self.create_grid(self.grid_config)
-        self.points = 0
         self.player_pos = Vector(2, 2)
         self.moved_from = self.player_pos.copy()
         self.coin_pos = self.new_coin_pos()
         self.bg_surf = self.remake_bg()
-
-        player_sprites =  self.assets.get_looped_r("player")
-        self.player_anim = SpriteLoop(player_sprites, 50)
-        coin_sprites = self.assets.get_looped_r("coin")
-        self.coin_anim = SpriteLoop(coin_sprites, 20)
-        
-        self.coin_sound = pygame.mixer.Sound(self.assets.folder / "coin.mp3")
-        self.move_sound = pygame.mixer.Sound(self.assets.folder / "move.wav")
-        self.mute = False
-        
         self.grid = self.get_field()
         self.repos_grid()
         self.start_time = now()
         self.delta = 0
         self.pause_time = now()
         self.pause_delta = 0.0
-        self.best = -1
-        self.time_results = []
-        self.avg_time = 0.0
         self.last_add = 0
         self.restarted = False
         try:
