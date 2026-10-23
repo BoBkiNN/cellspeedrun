@@ -53,7 +53,7 @@ class UiRow:
           self.elements: list[UiElement] = []
           self.surf = surface
         
-    def get_last(self) -> UiElement:
+    def get_last(self) -> UiElement|None:
         if len(self.elements) == 0:
             return None
         else:

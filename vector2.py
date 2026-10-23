@@ -31,8 +31,8 @@ class Vector:
     def __repr__(self) -> str:
         return str(self)
 
-    def normalize(self):
-        lenght = abs(self)
-        if lenght > 0:
-            self.x /= lenght
-            self.y /= lenght
+    # def normalize(self):
+    #     lenght = abs(self)
+    #     if lenght > 0:
+    #         self.x /= lenght
+    #         self.y /= lenght

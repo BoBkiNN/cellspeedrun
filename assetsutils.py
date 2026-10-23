@@ -6,7 +6,7 @@ assets_folder = os.getcwd()+os.sep+"assets"
 
 image_cache = {}
 
-def nearest_neighbor(surface: pygame.Surface, new_size: tuple) -> pygame.Surface:
+def nearest_neighbor(surface: pygame.Surface, new_size: tuple[int, int]) -> pygame.Surface:
     width, height = surface.get_size()
     new_surface = pygame.Surface(new_size, pygame.SRCALPHA)
     scale_x = new_size[0]//width
@@ -18,7 +18,7 @@ def nearest_neighbor(surface: pygame.Surface, new_size: tuple) -> pygame.Surface
             new_surface.set_at((x, y), rgba)
     return new_surface
 
-def get_image(filename: str, resize_to: tuple = None) -> pygame.Surface:
+def get_image(filename: str, resize_to: tuple[int, int] | None = None) -> pygame.Surface:
     try:
         return image_cache[(filename, resize_to)]
     except:
@@ -51,7 +51,7 @@ def get_looped_r(prefix, folder: str = "") -> list:
     ret = first + central
     return ret
 
-def get_looped(prefix, folder: str = None) -> list:
+def get_looped(prefix, folder: str | None = None) -> list:
     direct = assets_folder
     if folder is not None:
         direct = direct+os.sep+folder

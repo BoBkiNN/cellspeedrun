@@ -20,7 +20,7 @@ class ShadowedText:
 
 
 def render(text: str, size: int, name: str = "Arial", color: tuple = (255, 255, 255), file: bool = False) -> pygame.Surface:
-    font: Font = None
+    font: Font | None = None
     for f in font_cache:
         f: Font
         if f.size == size and f.name == name:

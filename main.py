@@ -80,7 +80,6 @@ class Game:
         pygame.display.set_caption("Crystal speedrun")
         pygame.display.set_icon(assetsutils.get_image(assetsutils.assets_folder+os.sep+"icon.png"))
         self.running = False
-        self.screen = None
         self.m_info = pygame.display.Info()
         self.fullscreen = False
         self.window_size = (800, 800)
@@ -272,15 +271,8 @@ class Game:
                 pygame.mixer.Sound.play(self.coin_sound)
     
     def draw_debug_rect(self, surf: pygame.Surface | pygame.Rect):
-        isrect = False
-        try:
-            surf.get_rect()
-        except:
-            isrect = True
-        if isrect:
-            pygame.draw.rect(self.screen, utils.random_col(), surf, 1)
-        else:
-            pygame.draw.rect(self.screen, utils.random_col(), surf.get_rect(), 1)
+        rect = surf.get_rect() if isinstance(surf, pygame.Surface) else surf
+        pygame.draw.rect(self.screen, utils.random_col(), rect, 1)
     
     def draw_right(self):
         time_s = "{:.3f}".format(self.delta)
