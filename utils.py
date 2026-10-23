@@ -109,3 +109,18 @@ class UiRow:
                 self.surf = pygame.Surface(list(self.size), pygame.SRCALPHA)
         self.elements.append(el)
         return self
+
+class SpriteLoop:
+    def __init__(self, sprites: list[pygame.Surface], interval: int) -> None:
+        self.sprites = sprites.copy()
+        self.interval = interval
+        self.state = 0
+
+    def update(self, tick: int):
+        if tick % self.interval == 0:
+            self.state += 1
+            if self.state >= len(self.sprites):
+                self.state = 0
+
+    def get(self):
+        return self.sprites[self.state]

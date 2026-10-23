@@ -7,7 +7,7 @@ import pygame
 from assetsutils import ASSETS_FOLDER, Assets
 import textutils
 import utils
-from utils import now
+from utils import SpriteLoop, now
 from vector2 import Vector
 from dataclasses import dataclass
 from pathlib import Path
@@ -253,14 +253,14 @@ class Game:
             cols=5
         )
         self.field = self.create_grid(self.grid_config)
-        self.player_sprites =  self.assets.get_looped_r("player")
-        self.coin_sprites = self.assets.get_looped_r("coin")
+        player_sprites =  self.assets.get_looped_r("player")
+        self.player_anim = SpriteLoop(player_sprites, 50)
+        coin_sprites = self.assets.get_looped_r("coin")
+        self.coin_anim = SpriteLoop(coin_sprites, 20)
         
         self.coin_sound = pygame.mixer.Sound(self.assets.folder / "coin.mp3")
         self.move_sound = pygame.mixer.Sound(self.assets.folder / "move.wav")
         self.mute = False
-        self.player = 0
-        self.coin_anim = 0
         
         self.grid = self.get_field()
         self.repos_grid()
@@ -360,16 +360,9 @@ class Game:
         if not utils.eq_vec(self.player_pos, self.moved_from):
             self.on_move(self.moved_from, self.player_pos)
             self.moved_from = self.player_pos.copy()
-        
-        if self.tick % 50 == 0:
-            self.player = self.player+1
-        if self.player == len(self.player_sprites):
-            self.player = 0
-        
-        if self.tick % 20 == 0:
-            self.coin_anim = self.coin_anim+1
-        if self.coin_anim == len(self.coin_sprites):
-            self.coin_anim = 0
+
+        self.player_anim.update(self.tick)
+        self.coin_anim.update(self.tick)
 
         self.delta = (now()-self.start_time)
         if utils.eq_vec(self.coin_pos, self.player_pos):
@@ -403,7 +396,7 @@ class Game:
         self.screen.blit(self.grid, self.gridpos)
         # pygame.draw.rect(self.screen, (255, 255, 0), grid_rect, 2)
         cell = self.field[self.player_pos.y][self.player_pos.x]
-        player: pygame.Surface = self.player_sprites[self.player]
+        player: pygame.Surface = self.player_anim.get()
         player_size = player.get_size()
         px = cell.x+(cell.size[0]//2 - player_size[0]//2)+self.gridpos[0]
         py = cell.y+(cell.size[1]//2 - player_size[1]//2)+self.gridpos[1]
@@ -411,7 +404,7 @@ class Game:
         self.screen.blit(player, [px, py])
 
         cell_c = self.field[self.coin_pos.y][self.coin_pos.x]
-        coin = self.coin_sprites[self.coin_anim]
+        coin = self.coin_anim.get()
         cx = cell_c.x+(cell_c.size[0]//2 - coin.get_size()[0]//2)+self.gridpos[0]
         cy = cell_c.y+(cell_c.size[1]//2 - coin.get_size()[1]//2)+self.gridpos[1]
 
