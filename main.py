@@ -182,13 +182,15 @@ class Game:
         if vec.y >= self.grid_config.rows:
             vec.y = 0
 
+    BG_PIXEL_SIZE = 20
+
     def remake_bg(self):
         self.bg_surf = pygame.Surface(self.window_size)
-        for i in range(self.window_size[1]//self.bg_px_s+1):
-            for j in range(self.window_size[0]//self.bg_px_s+1):
-                x = j*self.bg_px_s
-                y = i*self.bg_px_s
-                r = pygame.Rect(x, y, self.bg_px_s, self.bg_px_s)
+        for i in range(self.window_size[1]//Game.BG_PIXEL_SIZE+1):
+            for j in range(self.window_size[0]//Game.BG_PIXEL_SIZE+1):
+                x = j*Game.BG_PIXEL_SIZE
+                y = i*Game.BG_PIXEL_SIZE
+                r = pygame.Rect(x, y, Game.BG_PIXEL_SIZE, Game.BG_PIXEL_SIZE)
                 pygame.draw.rect(self.bg_surf, utils.random_chromatic(50), r)
         return self.bg_surf
     
@@ -242,7 +244,6 @@ class Game:
         coin_x = utils.random_exclude(0, 4, self.player_pos.x)
         coin_y = utils.random_exclude(0, 4, self.player_pos.y)
         self.coin_pos = Vector(coin_x, coin_y)
-        self.bg_px_s = 20
         self.bg_surf = self.remake_bg()
         self.grid_config = GridConfig(
             s_x=100,
