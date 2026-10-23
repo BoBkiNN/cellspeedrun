@@ -39,10 +39,10 @@ def eq_vec(one: Vector, other: Vector):
         if one.x == other.x and one.y == other.y: return True
         else: return False
 
-class AttachTo(enum.Enum):
-     UP = -1
+class VerticalAlignment(enum.Enum):
+     TOP = -1
      MIDDLE = 0
-     DOWN = 1
+     BOTTOM = 1
 
 class UiElement:
      def __init__(self, surf: pygame.Surface, pos: list, offset: tuple = (0, 0)):
@@ -86,7 +86,7 @@ class UiRow:
             self.surf.blit(el.surf, [el.x, el.y])
         return self.surf
     
-    def add(self, surf: pygame.Surface, attach: AttachTo = AttachTo.MIDDLE, offset: int = 0):
+    def add(self, surf: pygame.Surface, attach: VerticalAlignment = VerticalAlignment.MIDDLE, offset: int = 0):
         last = self.get_last()
         sizes = surf.get_size()
         if last == None:
@@ -97,9 +97,9 @@ class UiRow:
                 self.size[1] = el.size[1]
                 self.surf = pygame.Surface(list(self.size), pygame.SRCALPHA)
         else:
-            if attach == AttachTo.UP:
+            if attach == VerticalAlignment.TOP:
                 y = last.y
-            elif attach == AttachTo.DOWN:
+            elif attach == VerticalAlignment.BOTTOM:
                 y = last.y+last.size[1]-sizes[1]
             else:
                 y = last.y+last.size[1]//2-sizes[1]//2
