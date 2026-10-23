@@ -1,51 +1,73 @@
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable
+
 import pygame
 import utils
 
-font_cache = []
-shadowed_cache = {}
+
 
 class Font:
-    def __init__(self, name: str, pg: pygame.font.Font, size: int) -> None:
-        self.name = name
+    def __init__(self, id: str, pg: pygame.font.Font, size: int) -> None:
+        self.id = id
         self.pg = pg
         self.size = size
 
-class ShadowedText:
-    def __init__(self, text: str, name: str, size: int, color: tuple, surface: pygame.Surface) -> None:
-        self.text = text
-        self.name = name
-        self.size = size
-        self.color = color
-        self.surface = surface
+
+type FontName = str | Path
+"""Path to load font from file or string to use system font"""
+type Color = tuple[int, int, int] | tuple[int, int, int, int]
+
+# @dataclass
+# class ShadowedText:
+#     text: str
+#     size: int
+#     font: FontName
+#     color: Color
+#     offset: int
+#     shadow_color: Color
+#     surface: pygame.Surface
 
 
-def render(text: str, size: int, name: str = "Arial", color: tuple = (255, 255, 255), file: bool = False) -> pygame.Surface:
-    font: Font | None = None
+font_cache: list[Font] = []
+
+
+def _compute_font(id: str, name: FontName, size: int):
     for f in font_cache:
-        f: Font
-        if f.size == size and f.name == name:
-            font = f
-            break
+        if f.id == id and f.size == size:
+            return f
+    if isinstance(name, Path):
+        return Font(id, pygame.font.Font(name, size), size)
     else:
-        if file:
-            font = Font(name, pygame.font.Font(name, size), size)
-        else:
-            font = Font(name, pygame.font.SysFont(name, size), size)
-    return font.pg.render(text, True, color)
+        return Font(id, pygame.font.SysFont(name, size), size)
 
-def render_w_shadow(text: str, size: int, name: str = "Arial", color: tuple = (255, 255, 255), file: bool = False, offset: int = 3, shadow_col: tuple = (0, 0, 0, 70)) -> pygame.Surface:
-    try:
-        st: ShadowedText = shadowed_cache[(text, size, color)]
-        return st.surface
-    except KeyError:
-        pass
-    shadow = render(text, size, name, shadow_col, file)
-    fore = render(text, size, name, color, file)
+def render(text: str, size: int, font: FontName = "Arial", color: tuple = (255, 255, 255)) -> pygame.Surface:
+    f = _compute_font(str(font), font, size)
+    return f.pg.render(text, True, color)
+
+def render_w_shadow(text: str, size: int, font: FontName = "Arial", 
+                    color: tuple = (255, 255, 255), 
+                    offset: int = 3, 
+                    shadow_col: tuple = (0, 0, 0, 70)) -> pygame.Surface:
+    shadow = render(text, size, font, shadow_col)
+    fore = render(text, size, font, color)
     sx = max(shadow.get_size()[0], fore.get_size()[0])
     sy = max(shadow.get_size()[1], fore.get_size()[1])
     ret = pygame.Surface([sx, sy], pygame.SRCALPHA)
     ret.blit(shadow, [offset, offset])
     ret.blit(fore, [0, 0])
-    st = ShadowedText(text, name, size, color, ret)
-    shadowed_cache[(text, size, color)] = st
     return ret
+
+@dataclass
+class CachedSurface:
+    getter: Callable[[], pygame.Surface]
+    _value: pygame.Surface | None = None
+
+    def get(self):
+        if self._value is not None:
+            return self._value
+        self._value = v = self.getter()
+        return v
+
+    def invalidate(self):
+        self._value = None

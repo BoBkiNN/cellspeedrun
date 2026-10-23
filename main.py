@@ -7,10 +7,12 @@ import random
 import pygame
 
 import assetsutils
+from assetsutils import ASSETS_FOLDER, Assets
 import textutils
 import utils
 from vector2 import Vector
 from dataclasses import dataclass
+from pathlib import Path
 
 @dataclass(kw_only=True)
 class GridConfig:
@@ -89,10 +91,12 @@ class Game:
         return ret
     
     def __init__(self):
+        self.folder = Path()
+        self.assets = Assets(self.folder / ASSETS_FOLDER)
         atexit.register(self.at_exit)
         pygame.init()
         pygame.display.set_caption("Crystal speedrun")
-        pygame.display.set_icon(assetsutils.get_image(assetsutils.assets_folder+os.sep+"icon.png"))
+        pygame.display.set_icon(self.assets.get_image("icon.png"))
         self.running = False
         self.m_info = pygame.display.Info()
         self.fullscreen = False
@@ -102,13 +106,13 @@ class Game:
         self.size_ratio = [1.0, 1.0]
         self.tick = 0
         self.clock = pygame.time.Clock()
-        self.main_font = assetsutils.assets_folder+os.sep+"font.ttf"
-        loading = textutils.render("Loading..", int(50*self.size_ratio[1]), self.main_font, (51, 255, 177), file=True)
+        self.main_font = self.assets.folder / "font.ttf"
+        loading = textutils.render("Loading..", int(50*self.size_ratio[1]), self.main_font, (51, 255, 177))
         self.screen.blit(loading, [self.screen.get_size()[0]//2-loading.get_size()[0]//2, self.screen.get_size()[1]//2-loading.get_size()[1]//2])
         pygame.event.get()
         pygame.display.flip()
         self.paused = True
-        self.save_file = os.getcwd()+os.sep+"save.json"
+        self.save_file = self.folder / "save.json"
 
         self.points = 0
         self.player_pos = Vector(2, 2)
@@ -127,14 +131,14 @@ class Game:
             cols=5
         )
         self.field = self.create_grid(self.grid_config)
-        self.player_sprites =  assetsutils.get_looped_r("player")
-        self.coin_sprites = assetsutils.get_looped_r("coin")
-        self.clock_sprites = assetsutils.get_looped("clock", os.sep+"clock")
-        self.muted_sprites = assetsutils.get_looped("muted")
-        self.reset_icon = assetsutils.get_image(assetsutils.assets_folder+os.sep+"reset.png")
-        self.restart_icon = assetsutils.get_image(assetsutils.assets_folder+os.sep+"restart.png")
-        self.coin_sound = pygame.mixer.Sound(assetsutils.assets_folder+os.sep+"coin.mp3")
-        self.move_sound = pygame.mixer.Sound(assetsutils.assets_folder+os.sep+"move.wav")
+        self.player_sprites =  self.assets.get_looped_r("player")
+        self.coin_sprites = self.assets.get_looped_r("coin")
+        self.clock_sprites = self.assets.get_looped("clock", "clock")
+        self.muted_sprites = self.assets.get_looped("muted")
+        self.reset_icon = self.assets.get_image("reset.png")
+        self.restart_icon = self.assets.get_image("restart.png")
+        self.coin_sound = pygame.mixer.Sound(self.assets.folder / "coin.mp3")
+        self.move_sound = pygame.mixer.Sound(self.assets.folder / "move.wav")
         self.mute = False
         self.player = 0
         self.coin_anim = 0
@@ -186,7 +190,7 @@ class Game:
             print("Failed to save:", e)
     
     def load_data(self):
-        if not os.path.exists(self.save_file):
+        if not self.save_file.is_file():
             return
         with open(self.save_file, encoding="utf8") as f:
             s = f.read()
@@ -289,14 +293,14 @@ class Game:
     
     def draw_right(self):
         time_s = "{:.3f}".format(self.delta)
-        deltaText = textutils.render_w_shadow(time_s, int(20*self.size_ratio[1]), self.main_font, (255, 255, 0), file=True)
+        deltaText = textutils.render_w_shadow(time_s, int(20*self.size_ratio[1]), self.main_font, (255, 255, 0))
         clock: pygame.Surface = self.clock_sprites[self.clock_anim]
         delta_clock_y_dif = abs(deltaText.get_size()[1]-clock.get_size()[1])
         clockpos = [self.screen.get_size()[0]-clock.get_size()[0]-int(10*self.size_ratio[0]), int(10*self.size_ratio[1])-delta_clock_y_dif//2]
         self.screen.blit(clock, clockpos)
         self.screen.blit(deltaText, [clockpos[0]-deltaText.get_size()[0]-10, deltaText.get_size()[1]-int(10*self.size_ratio[1])])
 
-        avgText = textutils.render_w_shadow("avg: {:.3f}".format(self.avg_time), int(20*self.size_ratio[1]), self.main_font, (255, 255, 0), file=True)
+        avgText = textutils.render_w_shadow("avg: {:.3f}".format(self.avg_time), int(20*self.size_ratio[1]), self.main_font, (255, 255, 0))
         self.screen.blit(avgText, [self.screen.get_size()[0]-avgText.get_size()[0]-int(10*self.size_ratio[0]), deltaText.get_size()[1]+10+avgText.get_size()[1]-int(10*self.size_ratio[1])])
     
     def draw_left(self):
@@ -304,23 +308,23 @@ class Game:
             best = "{:.3f}".format(self.best)
         else:
             best = "-"
-        bestText = textutils.render_w_shadow("Best: "+best, int(20*self.size_ratio[1]), self.main_font, (230, 48, 127), file=True)
+        bestText = textutils.render_w_shadow("Best: "+best, int(20*self.size_ratio[1]), self.main_font, (230, 48, 127))
         # tickText = textutils.render_w_shadow("Tick #"+str(self.tick), int(20*self.size_ratio[1]), self.main_font, (255, 255, 0), file=True)
         # self.screen.blit(tickText, [int(10*self.size_ratio[0]), int(10*self.size_ratio[1])])
         self.screen.blit(bestText, [int(10*self.size_ratio[0]), int(10*self.size_ratio[1])])
-        mark = textutils.render_w_shadow("github.com/BoBkiNN", int(10*self.size_ratio[1]), self.main_font, (230, 48, 127), file=True)
+        mark = textutils.render_w_shadow("github.com/BoBkiNN", int(10*self.size_ratio[1]), self.main_font, (230, 48, 127))
         self.screen.blit(mark, [int(5*self.size_ratio[0]), self.screen.get_size()[1]-int(10*self.size_ratio[1])-mark.get_size()[1]])
     
     def draw_paused(self):
         layer = pygame.Surface(self.window_size, pygame.SRCALPHA)
         layer.fill((0, 0, 0, 90))
         # paused_s = "{:.3f}".format(self.pause_delta)
-        pausedText = textutils.render_w_shadow("PAUSE", int(40*self.size_ratio[1]), self.main_font, (255, 255, 255), file=True)
-        time = textutils.render_w_shadow("Press any key to resume", int(20*self.size_ratio[1]), self.main_font, (255, 255, 255), file=True)
+        pausedText = textutils.render_w_shadow("PAUSE", int(40*self.size_ratio[1]), self.main_font, (255, 255, 255))
+        time = textutils.render_w_shadow("Press any key to resume", int(20*self.size_ratio[1]), self.main_font, (255, 255, 255))
         layer.blit(pausedText, [layer.get_size()[0]//2-pausedText.get_size()[0]//2, layer.get_size()[1]//3])
         r2 = layer.blit(time, [layer.get_size()[0]//2-time.get_size()[0]//2, layer.get_size()[1]//3+pausedText.get_size()[1]+10])
 
-        mute_text = textutils.render_w_shadow("Press M to (un)mute", int(20*self.size_ratio[1]), self.main_font, (255, 255, 255), file=True)
+        mute_text = textutils.render_w_shadow("Press M to (un)mute", int(20*self.size_ratio[1]), self.main_font, (255, 255, 255))
         row2_size = [60+10+mute_text.get_size()[0], max(60, mute_text.get_size()[1])]
         mute_pos = [layer.get_size()[0]//2-row2_size[0]//2, r2.bottomright[1]+int(20*self.size_ratio[1])]
         r3 = layer.blit(self.muted_sprites[int(not self.mute)], mute_pos)
@@ -328,14 +332,14 @@ class Game:
         r5 = r3.union(r4)
 
         row2 = utils.UiRow(pygame.Surface(self.window_size, pygame.SRCALPHA))
-        restart_text = textutils.render_w_shadow("Press R to restart", int(20*self.size_ratio[1]), self.main_font, (255, 255, 255), file=True)
+        restart_text = textutils.render_w_shadow("Press R to restart", int(20*self.size_ratio[1]), self.main_font, (255, 255, 255))
         row2.add(self.restart_icon)
         row2.add(restart_text, offset=10)
         row2r = row2.render()
         r5 = layer.blit(row2r, [layer.get_size()[0]//2-row2r.get_size()[0]//2, r5.bottom+int(10*self.size_ratio[1])])
 
         row3 = utils.UiRow(pygame.Surface(self.window_size, pygame.SRCALPHA))
-        reset_text = textutils.render_w_shadow("Hold X to reset", int(20*self.size_ratio[1]), self.main_font, (235, 52, 110), file=True)
+        reset_text = textutils.render_w_shadow("Hold X to reset", int(20*self.size_ratio[1]), self.main_font, (235, 52, 110))
         row3.add(self.reset_icon)
         row3.add(reset_text, offset=10)
         b3 = row3.render()
@@ -385,7 +389,7 @@ class Game:
         addText = ""
         if self.last_add != 0:
             addText = " +"+str(self.last_add)
-        pointsText = textutils.render_w_shadow(str(self.points)+addText, int(20*self.size_ratio[1]), self.main_font, (51, 255, 177), file=True)
+        pointsText = textutils.render_w_shadow(str(self.points)+addText, int(20*self.size_ratio[1]), self.main_font, (51, 255, 177))
         self.screen.blit(pointsText, [self.screen.get_rect().centerx-pointsText.get_size()[0]//2, pointsText.get_size()[1]])
 
         self.draw_right()

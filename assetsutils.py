@@ -1,10 +1,57 @@
+from pathlib import Path
+
 import pygame
 import os
 from math import floor
 
 assets_folder = os.getcwd()+os.sep+"assets"
+ASSETS_FOLDER = "assets"
 
-image_cache = {}
+ImageCacheKey = tuple[Path, tuple[int, int] | None]
+"""Tuple of image path to size"""
+
+class Assets:
+    def __init__(self, folder: Path) -> None:
+        self.folder = folder
+        self.image_cache: dict[ImageCacheKey, pygame.Surface] = {}
+
+    def get_image(self, file: Path | str, resize_to: tuple[int, int] | None = None) -> pygame.Surface:
+        path = self.folder / file
+        key = (path, resize_to)
+        if key in self.image_cache:
+            return self.image_cache[key]
+        
+        image = pygame.image.load(path)
+        if resize_to is None:
+            self.image_cache[(path, image.get_size())] = image
+            self.image_cache[(path, None)] = image
+            return image
+        else:
+            ret = nearest_neighbor(image, resize_to)
+            self.image_cache[(path, resize_to)] = ret
+            return ret
+
+    def list_files(self, subfolder: Path | str | None):
+        path = self.folder if not subfolder else self.folder / subfolder
+        return os.listdir(path)
+
+    def get_looped_r(self, prefix: str, folder: str = "") -> list[pygame.Surface]:
+        first = self.get_looped(prefix, folder)
+        central = list(first)
+        central.pop(0)
+        central.pop(len(central)-1)
+        central.reverse()
+        ret = first + central
+        return ret
+
+    def get_looped(self, prefix: str, folder: str = "") -> list[pygame.Surface]:
+        files = [f for f in self.list_files(folder) if f.startswith(prefix) and f.endswith(".png")]
+        ret: list[pygame.Surface] = []
+        for i in range(len(files)):
+            file = f"{prefix}{i+1}.png"
+            img = self.get_image(Path(folder) / file if folder else file)
+            ret.append(img)
+        return ret
 
 def nearest_neighbor(surface: pygame.Surface, new_size: tuple[int, int]) -> pygame.Surface:
     width, height = surface.get_size()
@@ -17,48 +64,3 @@ def nearest_neighbor(surface: pygame.Surface, new_size: tuple[int, int]) -> pyga
             rgba = surface.get_at((i, j))
             new_surface.set_at((x, y), rgba)
     return new_surface
-
-def get_image(filename: str, resize_to: tuple[int, int] | None = None) -> pygame.Surface:
-    try:
-        return image_cache[(filename, resize_to)]
-    except:
-        pass
-    image = pygame.image.load(filename)
-    if resize_to is None:
-        image_cache[(filename, image.get_size())] = image
-        return image
-    else:
-        ret = nearest_neighbor(image, resize_to)
-        image_cache[(filename, resize_to)] = ret
-        return ret
-
-def get_looped_r(prefix, folder: str = "") -> list:
-    direct = assets_folder
-    if folder is not None:
-        direct = direct+os.sep+folder
-    files = [f for f in os.listdir(direct) if f.startswith(prefix) and f.endswith(".png")]
-    first = []
-    for n in range(1, len(files)+1):
-        name = prefix+str(n)+".png"
-        img = get_image(direct+os.sep+name)
-        first.append(img)
-    if len(first) < 3:
-        return first
-    central = list(first)
-    central.pop(0)
-    central.pop(len(central)-1)
-    central.reverse()
-    ret = first + central
-    return ret
-
-def get_looped(prefix, folder: str | None = None) -> list:
-    direct = assets_folder
-    if folder is not None:
-        direct = direct+os.sep+folder
-    files = [f for f in os.listdir(direct) if f.startswith(prefix) and f.endswith(".png")]
-    ret = []
-    for n in range(1, len(files)+1):
-        name = prefix+str(n)+".png"
-        img = get_image(direct+os.sep+name)
-        ret.append(img)
-    return ret
