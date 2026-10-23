@@ -14,8 +14,6 @@ class Font:
 
 type FontName = str | Path
 """Path to load font from file or string to use system font"""
-type Color = tuple[int, int, int] | tuple[int, int, int, int]
-
 
 font_cache: list[Font] = []
 
@@ -25,9 +23,11 @@ def _compute_font(id: str, name: FontName, size: int):
         if f.id == id and f.size == size:
             return f
     if isinstance(name, Path):
-        return Font(id, pygame.font.Font(name, size), size)
+        f = Font(id, pygame.font.Font(name, size), size)
     else:
-        return Font(id, pygame.font.SysFont(name, size), size)
+        f = Font(id, pygame.font.SysFont(name, size), size)
+    font_cache.append(f)
+    return f
 
 def render(text: str, size: int, font: FontName = "Arial", color: tuple = (255, 255, 255)) -> pygame.Surface:
     f = _compute_font(str(font), font, size)
