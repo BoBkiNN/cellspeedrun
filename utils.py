@@ -1,6 +1,10 @@
 import random, colorsys, enum
+import time
 from vector2 import Vector
 import pygame
+
+def now():
+    return time.time()
 
 def random_col(max: int = 255) -> tuple:
     return (random.randint(0, max), random.randint(0, max), random.randint(0, max))

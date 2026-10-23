@@ -1,15 +1,13 @@
 import atexit
 import json
-import os
-from datetime import datetime
 import random
 
 import pygame
 
-import assetsutils
 from assetsutils import ASSETS_FOLDER, Assets
 import textutils
 import utils
+from utils import now
 from vector2 import Vector
 from dataclasses import dataclass
 from pathlib import Path
@@ -145,9 +143,9 @@ class Game:
         self.clock_anim = 0
         self.grid = self.get_field()
         self.repos_grid()
-        self.start_time = datetime.utcnow().timestamp()
+        self.start_time = now()
         self.delta = 0
-        self.pause_time = datetime.utcnow().timestamp()
+        self.pause_time = now()
         self.pause_delta = 0.0
         self.best = -1
         self.time_results = []
@@ -207,7 +205,7 @@ class Game:
             self.restarted = False
             return
         self.pause_delta = 0.0
-        self.pause_time = datetime.utcnow().timestamp()
+        self.pause_time = now()
         self.save_data()
     
     def do_reset(self):
@@ -228,7 +226,7 @@ class Game:
         self.last_add = 0
         self.delta = 0
         self.start_time = self.start_time+self.pause_delta
-        self.pause_time = self.pause_time = datetime.utcnow().timestamp()
+        self.pause_time = self.pause_time = now()
         if not self.mute:
                 pygame.mixer.Sound.play(self.coin_sound)
     
@@ -237,7 +235,7 @@ class Game:
             if self.reset_time > 0:
                     self.reset_time -= 1
         if self.paused:
-            self.pause_delta = datetime.utcnow().timestamp()-self.pause_time
+            self.pause_delta = now()-self.pause_time
             if self.x_hold == True and self.reset_time < self.time_to_reset:
                 self.reset_time += 1 
             if self.reset_time == self.time_to_reset:
@@ -266,12 +264,12 @@ class Game:
         if self.clock_anim == len(self.clock_sprites):
             self.clock_anim = 0
 
-        self.delta = (datetime.utcnow().timestamp()-self.start_time)
+        self.delta = (now()-self.start_time)
         if utils.eq_vec(self.coin_pos, self.player_pos):
             new_x = utils.random_exclude(0, 4, self.player_pos.x)
             new_y = utils.random_exclude(0, 4, self.player_pos.y)
             self.coin_pos = Vector(new_x, new_y)
-            self.start_time = datetime.utcnow().timestamp()
+            self.start_time = now()
             self.time_results.append(self.delta)
             if self.best == -1:
                 self.best = min(self.time_results)
