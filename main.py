@@ -1,16 +1,17 @@
 import atexit
 import json
 import random
+from dataclasses import dataclass
+from pathlib import Path
 
 import pygame
 
-from assetsutils import ASSETS_FOLDER, Assets
 import textutils
 import utils
+from assetsutils import ASSETS_FOLDER, Assets
 from utils import SpriteLoop, now
 from vector2 import Vector
-from dataclasses import dataclass
-from pathlib import Path
+
 
 @dataclass(kw_only=True)
 class GridConfig:

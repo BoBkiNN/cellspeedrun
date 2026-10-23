@@ -3,8 +3,6 @@ from pathlib import Path
 from typing import Callable
 
 import pygame
-import utils
-
 
 
 class Font:
@@ -17,16 +15,6 @@ class Font:
 type FontName = str | Path
 """Path to load font from file or string to use system font"""
 type Color = tuple[int, int, int] | tuple[int, int, int, int]
-
-# @dataclass
-# class ShadowedText:
-#     text: str
-#     size: int
-#     font: FontName
-#     color: Color
-#     offset: int
-#     shadow_color: Color
-#     surface: pygame.Surface
 
 
 font_cache: list[Font] = []

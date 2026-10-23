@@ -1,8 +1,8 @@
+import os
+from math import floor
 from pathlib import Path
 
 import pygame
-import os
-from math import floor
 
 ASSETS_FOLDER = "assets"
 

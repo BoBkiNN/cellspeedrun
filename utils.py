@@ -1,7 +1,12 @@
-import random, colorsys, enum
+import colorsys
+import enum
+import random
 import time
-from vector2 import Vector
+
 import pygame
+
+from vector2 import Vector
+
 
 def now():
     return time.time()
