@@ -25,7 +25,7 @@ class GridConfig:
     rows: int
     cols: int
 
-class Menu:
+class Ui:
     TIME_TO_RESET = 120
 
     def __init__(self, game: "Game") -> None:
@@ -49,9 +49,9 @@ class Menu:
                 self.reset_time -= 1
         if self.game.paused:
             self.pause_delta = now()-self.game.pause_time
-            if self.holding_x == True and self.reset_time < Menu.TIME_TO_RESET:
+            if self.holding_x == True and self.reset_time < Ui.TIME_TO_RESET:
                 self.reset_time += 1 
-            if self.reset_time >= Menu.TIME_TO_RESET:
+            if self.reset_time >= Ui.TIME_TO_RESET:
                 self.reset_time = 0
                 self.game.do_reset()
         else:
@@ -130,7 +130,7 @@ class Menu:
 
         if self.holding_x or self.reset_time != 0:
             # print(self.reset_time)
-            p = self.reset_time / Menu.TIME_TO_RESET
+            p = self.reset_time / Ui.TIME_TO_RESET
             if p < 0:
                 p = 0
             lenght = b3r.size[0]
@@ -277,7 +277,7 @@ class Game:
             self.load_data()
         except Exception as e:
             print("Failed to load:", e)
-        self.menu = Menu(self)
+        self.menu = Ui(self)
 
     def start(self):
         self.running = True
