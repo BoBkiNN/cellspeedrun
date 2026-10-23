@@ -350,6 +350,26 @@ class Game:
         self.pause_time = self.pause_time = now()
         if not self.mute:
                 pygame.mixer.Sound.play(self.coin_sound)
+
+    def pickup_coin(self):
+        new_x = utils.random_exclude(0, 4, self.player_pos.x)
+        new_y = utils.random_exclude(0, 4, self.player_pos.y)
+        self.coin_pos = Vector(new_x, new_y)
+        self.start_time = now()
+        self.time_results.append(self.delta)
+        if self.best == -1:
+            self.best = min(self.time_results)
+        else:
+            self.best = min(self.time_results+[self.best])
+        d = len(self.time_results) - 100
+        if d > 0:
+            for _ in range(d):
+                self.time_results.pop(0)
+        self.avg_time = sum(self.time_results) / len(self.time_results)
+        self.last_add = int(100*(1.120/self.delta))+100
+        self.points += self.last_add
+        if not self.mute:
+            pygame.mixer.Sound.play(self.coin_sound)
     
     def update(self):
         if self.paused:
@@ -367,24 +387,7 @@ class Game:
 
         self.delta = (now()-self.start_time)
         if utils.eq_vec(self.coin_pos, self.player_pos):
-            new_x = utils.random_exclude(0, 4, self.player_pos.x)
-            new_y = utils.random_exclude(0, 4, self.player_pos.y)
-            self.coin_pos = Vector(new_x, new_y)
-            self.start_time = now()
-            self.time_results.append(self.delta)
-            if self.best == -1:
-                self.best = min(self.time_results)
-            else:
-                self.best = min(self.time_results+[self.best])
-            d = len(self.time_results) - 100
-            if d > 0:
-                for _ in range(d):
-                    self.time_results.pop(0)
-            self.avg_time = sum(self.time_results) / len(self.time_results)
-            self.last_add = int(100*(1.120/self.delta))+100
-            self.points += self.last_add
-            if not self.mute:
-                pygame.mixer.Sound.play(self.coin_sound)
+            self.pickup_coin()
         self.menu.update()
     
     def draw_debug_rect(self, surf: pygame.Surface | pygame.Rect):
