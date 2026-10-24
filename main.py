@@ -31,7 +31,6 @@ class Ui:
 
     def __init__(self, game: "Game") -> None:
         self.game = game
-        self.screen = game.screen
         self.clock_sprites = game.assets.get_looped("clock", "clock")
         self.muted_sprites = game.assets.get_looped("muted")
         self.reset_icon = game.assets.get_image("reset.png")
@@ -49,7 +48,6 @@ class Ui:
             if self.reset_time > 0:
                 self.reset_time -= 1
         if self.game.paused:
-            self.pause_delta = now()-self.game.pause_time
             if self.holding_x == True and self.reset_time < Ui.TIME_TO_RESET:
                 self.reset_time += 1 
             if self.reset_time >= Ui.TIME_TO_RESET:
@@ -68,6 +66,10 @@ class Ui:
     @property
     def main_font(self):
         return self.game.main_font
+
+    @property
+    def screen(self):
+        return self.game.screen
 
     def draw_right(self):
         time_s = "{:.3f}".format(self.game.delta)
@@ -282,7 +284,10 @@ class Game:
 
     def start(self):
         self.running = True
-        self.game_loop()
+        try:
+            self.game_loop()
+        except KeyboardInterrupt:
+            self.stop()
 
     def stop(self):
         self.running = False
@@ -374,6 +379,7 @@ class Game:
     
     def update(self):
         if self.paused:
+            self.pause_delta = now()-self.pause_time
             self.menu.update()
             return
         self.loopvec(self.player_pos)
