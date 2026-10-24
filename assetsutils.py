@@ -36,6 +36,8 @@ class Assets:
 
     def get_looped_r(self, prefix: str, folder: str = "") -> list[pygame.Surface]:
         first = self.get_looped(prefix, folder)
+        if len(first) < 3:
+            return first
         central = list(first)
         central.pop(0)
         central.pop(len(central)-1)
